@@ -80,12 +80,12 @@ class VoidBot(SingleServerIRCBot):
         sender = event.source
         channel = event.target
         if channel == '#miraheze-cvt' and sender.host == 'miraheze/bot/Zppix' and sender.nick != 'ZppixBot':
-            connection.privmsg('ChanServ', f'OP #miraheze-cvt {connection.get_nickname()}')
+            connection.privmsg('ChanServ', f'OP #miraheze-cvt-private {connection.get_nickname()}')
             self.discord = sender.nick
 
     def on_mode(self, connection, event):
         """Help Zppix with his damn bot part 2."""
-        if self.discord is not False and event.target == '#miraheze-cvt':
+        if self.discord is not False and event.target == '#miraheze-cvt-private':
             modes = irc.modes.parse_channel_modes(event.args[0])
             for mode in modes:
                 if mode == ['+', 'o', connection.get_nickname()]:
