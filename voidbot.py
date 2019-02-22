@@ -4,7 +4,7 @@ This is intended for internal use only
 Do not use this file outside of Void's permission.
 """
 
-import logging
+# import logging
 import commands
 import irc.modes
 
@@ -12,7 +12,7 @@ from importlib import reload
 from irc.bot import SingleServerIRCBot, ServerSpec
 from wiki.api import Api
 
-logging.basicConfig(level=logging.WARNING, filename='issues.log')
+# logging.basicConfig(level=logging.WARNING, filename='issues.log')
 # logging.basicConfig(level=logging.DEBUG)
 
 
