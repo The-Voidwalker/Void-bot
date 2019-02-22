@@ -90,6 +90,6 @@ class VoidBot(SingleServerIRCBot):
             for mode in modes:
                 if mode == ['+', 'o', None]:
                     connection.invite(self.discord, '#miraheze-cvt-private')
-                    connection.mode(event.target, '-o'+connection.get_nickname())
+                    connection.mode(event.target, '-o '+connection.get_nickname())
                     self.discord = False
                     break
