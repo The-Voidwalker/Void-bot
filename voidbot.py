@@ -86,10 +86,10 @@ class VoidBot(SingleServerIRCBot):
     def on_mode(self, connection, event):
         """Help Zppix with his damn bot part 2."""
         if self.discord is not False and event.target == '#miraheze-cvt-private':
-            modes = irc.modes.parse_channel_modes(event.args[0])
+            modes = irc.modes.parse_channel_modes(event.arguments[0])
             for mode in modes:
-                if mode == ['+', 'o', connection.get_nickname()]:
+                if mode == ['+', 'o', None]:
                     connection.invite(self.discord, '#miraheze-cvt-private')
-                    connection.mode(event.target, connection.get_nickname())
+                    connection.mode(event.target, '-o'+connection.get_nickname())
                     self.discord = False
                     break
