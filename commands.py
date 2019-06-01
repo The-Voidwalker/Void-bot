@@ -175,7 +175,7 @@ def help(bot, event):
     target = event.target if event.type == 'pubmsg' else event.source.nick
     args = event.arguments[0].split()[1:]
     if len(args) == 0:
-        return bot.connection.privmsg(target, 'Please see https://meta.miraheze.org/wiki/User:Void-bot/Help_2')
+        return bot.connection.privmsg(target, 'Please see https://meta.miraheze.org/wiki/User:Void-bot/Help')
     command = CommandHandler.get_command(args[0])
     if command is False or command.help is False:
         return bot.connection.privmsg(target, f'Sorry, I could not find help on {args[0]}.')
