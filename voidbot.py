@@ -53,7 +53,7 @@ class VoidBot(SingleServerIRCBot):
             self.connection.disconnect(message="I'm probably no longer connected to the server. Oops!")
 
     def on_pong(self, connection, event):
-        self.probably_connected = True
+        self.probably_connected = False
 
     def get_version(self):
         """Return my bot description.
