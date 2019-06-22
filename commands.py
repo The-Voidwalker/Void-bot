@@ -225,6 +225,6 @@ CommandHandler.commands.append(Command('log', log, restriction=Command.VOICED, h
 
 def ping(bot, event):
     if event.target == '##voidwalker':
-        bot.connection.ping('freenode.net')
+        bot.check_connection()
 help_str = "Debug only. Please don't play with this!"
 CommandHandler.commands.append(Command('ping', ping, restriction=Command.DEVELOPER, help=help_str))

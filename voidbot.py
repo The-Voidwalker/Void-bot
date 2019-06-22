@@ -35,10 +35,25 @@ class VoidBot(SingleServerIRCBot):
             'cvt': Api('miraheze', 'cvt.miraheze.org'),
             'testadminwiki': Api('testadminwiki', 'testwiki.wiki', script_path='')
         }
+        self.probably_connected = True
 
     def _identify(self):
         """Login with NickServ."""
         self.connection.privmsg('NickServ', f'IDENTIFY {self.account} {self.__password}')
+
+    def check_connection(self):
+        """Verify connection to server."""
+        self.probably_connected = False
+        self.reactor.scheduler.execute_after(30, self.check_connection_call)
+        self.connection.ping('freenode.net')
+
+    def check_connection_call(self):
+        """Handle possible disconnect."""
+        if not self.probably_connected:
+            self.connection.disconnect(message="I'm probably no longer connected to the server. Oops!")
+
+    def on_pong(self, connection, event):
+        self.probably_connected = True
 
     def get_version(self):
         """Return my bot description.
