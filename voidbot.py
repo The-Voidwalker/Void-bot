@@ -36,6 +36,7 @@ class VoidBot(SingleServerIRCBot):
             'testadminwiki': Api('testadminwiki', 'testwiki.wiki', script_path='')
         }
         self.probably_connected = True
+        self.reactor.scheduler.execute_every(600, self.check_connection)
 
     def _identify(self):
         """Login with NickServ."""
@@ -53,7 +54,7 @@ class VoidBot(SingleServerIRCBot):
             self.connection.disconnect(message="I'm probably no longer connected to the server. Oops!")
 
     def on_pong(self, connection, event):
-        self.probably_connected = False
+        self.probably_connected = True
 
     def get_version(self):
         """Return my bot description.
