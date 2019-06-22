@@ -222,3 +222,9 @@ def log(bot, event):
             logs.exception(e)
 help_str = 'Does cvt log and testadminwiki server admin log.'
 CommandHandler.commands.append(Command('log', log, restriction=Command.VOICED, help=help_str))
+
+def ping(bot, event):
+    if event.target == '##voidwalker':
+        bot.ping('')
+help_str = "Debug only. Please don't play with this!"
+CommandHandler.commands.append(Command('ping', ping, restriction=Command.DEVELOPER, help=help_str))
