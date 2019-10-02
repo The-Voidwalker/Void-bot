@@ -4,16 +4,15 @@ This is intended for internal use only
 Do not use this file outside of Void's permission.
 """
 
-# import logging
 import commands
 import irc.modes
+import logging
 
 from importlib import reload
 from irc.bot import SingleServerIRCBot, ServerSpec
 from wiki.api import Api
 
-# logging.basicConfig(level=logging.WARNING, filename='issues.log')
-# logging.basicConfig(level=logging.DEBUG)
+log = logging.getLogger(__name__)
 
 
 class VoidBot(SingleServerIRCBot):
@@ -51,6 +50,7 @@ class VoidBot(SingleServerIRCBot):
     def check_connection_call(self):
         """Handle possible disconnect."""
         if not self.probably_connected:
+            log.info('Bot is probably disconnected')
             self.connection.disconnect(message="I'm probably no longer connected to the server. Oops!")
 
     def on_pong(self, connection, event):
