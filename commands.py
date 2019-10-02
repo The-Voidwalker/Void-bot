@@ -114,7 +114,7 @@ def cmd_disable(bot, event):
     if not CommandHandler.disable_command(args[0]):
         return bot.connection.privmsg(target, f'I can\'t disable what does not exist! (Could not find "{args[0]}")')
     else:
-        logs.info(f'{target} has disabled command {args[0]}')
+        logs.info(f'{event.source.nick} has disabled command {args[0]}')
 help_str = 'Attempt to disable the supplied command. Core commands cannot be disabled. (Requires Trusted)'
 CommandHandler.master_commands.append(Command('disable', cmd_disable, restriction=Command.TRUSTED, help=help_str))
 
@@ -126,7 +126,7 @@ def cmd_enable(bot, event):
     if not CommandHandler.enable_command(args[0]):
         return bot.connection.privmsg(target, f'I can\'t enable what does not exist! (Could not find "{args[0]}")')
     else:
-        logs.info(f'{target} has enabled command {args[0]}')
+        logs.info(f'{event.source.nick} has enabled command {args[0]}')
 help_str = 'Attempt to enable the supplied command. (Requires Trusted)'
 CommandHandler.master_commands.append(Command('enable', cmd_enable, restriction=Command.TRUSTED, help=help_str))
 
@@ -136,7 +136,7 @@ def nick(bot, event):
     if len(args) == 0:
         return bot.connection.privmsg(target, "That's not a nick! That's nothing!")
     bot.connection.nick(args[0])
-    logs.info(f'{target} has changed our nick to {args[0]}')
+    logs.info(f'{event.source.nick} has changed our nick to {args[0]}')
 help_str = 'Change the nick of the bot to the supplied value. (Requires Trusted)'
 CommandHandler.commands.append(Command('nick', nick, restriction=Command.TRUSTED, help=help_str))
 
@@ -148,7 +148,7 @@ def join(bot, event):
     if args[0][0] != '#':
         return bot.connection.privmsg(target, f'"{args[0]}" is not a channel!')
     bot.connection.join(args[0])
-    logs.info(f'{target} has asked us to join {args[0]}')
+    logs.info(f'{event.source.nick} has asked us to join {args[0]}')
 help_str = 'Join the supplied channel. (Requires Trusted)'
 CommandHandler.commands.append(Command('join', join, restriction=Command.TRUSTED, help=help_str))
 
