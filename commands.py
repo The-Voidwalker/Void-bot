@@ -9,7 +9,7 @@ from datetime import datetime
 from wiki.api import ApiError, ConnectionError
 from wiki.helpers import Logger
 
-log = logging.getLogger(__name__)
+logs = logging.getLogger(__name__)
 
 
 class Command:
