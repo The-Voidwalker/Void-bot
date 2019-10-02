@@ -128,7 +128,7 @@ def cmd_enable(bot, event):
     else:
         logs.info(f'{target} has enabled command {args[0]}')
 help_str = 'Attempt to enable the supplied command. (Requires Trusted)'
-CommandHandler.master_commands.append(Command('disable', cmd_enable, restriction=Command.TRUSTED, help=help_str))
+CommandHandler.master_commands.append(Command('enable', cmd_enable, restriction=Command.TRUSTED, help=help_str))
 
 def nick(bot, event):
     target = event.target if event.type == 'pubmsg' else event.source.nick
