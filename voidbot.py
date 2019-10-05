@@ -66,7 +66,7 @@ class VoidBot(SingleServerIRCBot):
     def on_welcome(self, connection, event):
         """Handle welcome."""
         self._identify()
-        log.info('Bot has connected to the IRC')
+        log.info('Bot has connected to IRC')
 
     def on_396(self, connection, event):
         """Join channels after cloak is applied."""
