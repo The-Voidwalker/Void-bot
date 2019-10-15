@@ -212,7 +212,7 @@ def log(bot, event):
             log_entry = Logger.irc_entry(event, format)
             Logger(api, page, header, source, log_entry).run()
             bot.connection.privmsg(event.target, f'Saved item "{event.arguments[0][5:]}"')
-            logs.info(f'{source} issued cvt log {event.arguments[0][5:]}')
+            logs.info(f'{source} issued cvt log; {event.arguments[0][5:]}')
         except (ConnectionError, ApiError) as e:
             bot.connection.privmsg(event.target, 'Failed to save item!')
             logs.exception(e)
@@ -227,7 +227,7 @@ def log(bot, event):
             log_entry = Logger.irc_entry(event, format)
             Logger(api, page, header, source, log_entry).run()
             bot.connection.privmsg(event.target, f'Saved item "{event.arguments[0][5:]}"')
-            logs.info(f'{source} issued sal log {event.arguments[0][5:]}')
+            logs.info(f'{source} issued sal log; {event.arguments[0][5:]}')
         except (ConnectionError, ApiError) as e:
             bot.connection.privmsg(event.target, 'Failed to save item!')
             logs.exception(e)
