@@ -1,0 +1,5 @@
+__pycache__/
+issues.log
+launch.py
+auth_config.py
+consumerinfo.txt
