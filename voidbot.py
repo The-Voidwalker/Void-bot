@@ -4,8 +4,9 @@ This is intended for internal use only
 Do not use this file outside of Void's permission.
 """
 
+import command
 import commands
-import irc.modes
+import handlers
 import logging
 
 from importlib import reload
@@ -28,7 +29,6 @@ class VoidBot(SingleServerIRCBot):
         self.dev = 'wikipedia/The-Voidwalker'
         self.__password = password
         self.channel_list = []
-        self.discord = False
         self.apis = {
             'meta': Api('miraheze', 'meta.miraheze.org'),
             'cvt': Api('miraheze', 'cvt.miraheze.org'),
@@ -36,10 +36,20 @@ class VoidBot(SingleServerIRCBot):
         }
         self.probably_connected = True
         self.reactor.scheduler.execute_every(600, self.check_connection)
+        self.handlers = handlers.load_handlers(self)
+        self.reactor.add_global_handler('all_events', self.run_handlers, 10)
+        # TODO: trust lists
 
     def _identify(self):
         """Login with NickServ."""
         self.connection.privmsg('NickServ', f'IDENTIFY {self.account} {self.__password}')
+
+    def _reload_stuff(self):
+        """Reload internal stuff."""
+        command.CommandHandler.clear_commands()
+        reload(commands)
+        reload(handlers)
+        self.handlers = handlers.load_handlers(self)
 
     def check_connection(self):
         """Verify connection to server."""
@@ -53,7 +63,13 @@ class VoidBot(SingleServerIRCBot):
             log.info('Bot is probably disconnected')
             self.connection.disconnect(message="I'm probably no longer connected to the server. Oops!")
 
+    def run_handlers(self, event):
+        """Run all known handlers."""
+        for handler in self.handlers:
+            handler.run(event)
+
     def on_pong(self, connection, event):
+        """Bot is connected."""
         self.probably_connected = True
 
     def get_version(self):
@@ -78,35 +94,16 @@ class VoidBot(SingleServerIRCBot):
         """Search public messages for commands."""
         sender = event.source
         if sender.host == self.dev and event.arguments[0] == '$reload':
-            reload(commands)
+            self._reload_stuff()
             connection.privmsg(event.target, 'Reloaded Commands!')
-        handler = commands.CommandHandler(event, self)
+        handler = command.CommandHandler(event, self)
         handler.run()
 
     def on_privmsg(self, connection, event):
         """Handle commands in private messages."""
         sender = event.source
         if sender.host == self.dev and event.arguments[0] == '$reload':
-            reload(commands)
+            self._reload_stuff()
             connection.privmsg(sender.nick, 'Reloaded Commands!')
-        handler = commands.CommandHandler(event, self)
+        handler = command.CommandHandler(event, self)
         handler.run()
-
-    def on_join(self, connection, event):
-        """Help Zppix with his damn bot."""
-        sender = event.source
-        channel = event.target
-        if channel == '#miraheze-cvt' and sender.host == 'miraheze/bot/Zppix' and sender.nick != 'ZppixBot':
-            self.discord = sender.nick
-            connection.privmsg('ChanServ', f'OP #miraheze-cvt-private {connection.get_nickname()}')
-
-    def on_mode(self, connection, event):
-        """Help Zppix with his damn bot part 2."""
-        if self.discord is not False and event.target == '#miraheze-cvt-private':
-            modes = irc.modes.parse_channel_modes(event.arguments[0])
-            for mode in modes:
-                if mode == ['+', 'o', None]:
-                    connection.invite(self.discord, '#miraheze-cvt-private')
-                    connection.mode(event.target, '-o '+connection.get_nickname())
-                    self.discord = False
-                    break
