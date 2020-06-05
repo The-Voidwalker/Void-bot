@@ -63,10 +63,10 @@ class VoidBot(SingleServerIRCBot):
             log.info('Bot is probably disconnected')
             self.connection.disconnect(message="I'm probably no longer connected to the server. Oops!")
 
-    def run_handlers(self, event):
+    def run_handlers(self, connection, event):
         """Run all known handlers."""
         for handler in self.handlers:
-            handler.run(event)
+            handler.run(connection, event)
 
     def on_pong(self, connection, event):
         """Bot is connected."""

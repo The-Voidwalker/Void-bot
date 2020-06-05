@@ -18,6 +18,7 @@ class Handler():
         """Create a handler for events."""
         self.bot = bot
         self.skip_events = []
+        self.commands = []
 
     def _ignore(self, *args):
         pass
@@ -26,6 +27,11 @@ class Handler():
         """Run on events we have methods for."""
         if event.type not in self.skip_events:
             getattr(self, f'on_{event.type}', self._ignore)(connection, event)
+
+    def load_commands(self):
+        """Load in registered commands."""
+        for command in self.commands:
+            CommandHandler.commands.append(command)
 
 
 class BotHelper(Handler):
@@ -72,6 +78,61 @@ class Lockdown(Handler):
         self.pending_users = {}
         # self.get_locked_down()  # In case of bot restarts, needs update
         self.auto = False
+        self.commands.append(Command(
+            'lockdown',
+            self.lockdown_cmd,
+            restriction=Command.DEVELOPER,
+            help='Manage lockdowns. Command format is $lockdown <enable|lift> [channel]'
+        ))
+        self.commands.append(Command(
+            'toggleauto',
+            self.toggle_auto,
+            restriction=Command.DEVELOPER,
+            help='Toggle automatic handling of lockdowns.'
+        ))
+
+    def toggle_auto(self, bot, event):
+        """Toggle automatic lockdown detection."""
+        target = event.target if event.type == 'pubmsg' else event.source.nick
+        old = self.auto
+        self.auto = not old
+        if old:
+            bot.connection.privmsg(target, 'Automatic handling of lockdowns was disabled.')
+        else:
+            bot.connection.privmsg(target, 'Automatic handling of lockdowns was enabled.')
+
+    def lockdown_cmd(self, bot, event):
+        """Lockdown command."""
+        target = event.target if event.type == 'pubmsg' else event.source.nick
+        args = event.arguments[0].split()[1:]
+        if len(args) == 0:
+            bot.connection.privmsg(target, 'Command format is $lockdown <enable|lift> [channel]')
+        elif len(args) == 1:
+            if not event.type == 'pubmsg':
+                bot.connection.privmsg(target, 'A target channel is required if using private messages!')
+            elif args[0] in ['enable', 'lift']:
+                if target not in self.can_moderate:
+                    bot.connection.privmsg(target, 'Cannot moderate this channel!')
+                elif args[0] == 'enable':
+                    self.pre_lockdown(bot.connection, target)
+                elif args[0] == 'lift':
+                    self.pre_unlock(bot.connection, target)
+            else:
+                bot.connection.privmsg(target, f'Unrecognised option "{args[0]}"')
+        else:
+            if args[0] in ['enable', 'lift']:
+                if args[1][0] != '#':
+                    bot.connection.privmsg(target, f'"{args[1]}" is not a channel!')
+                elif args[1] not in self.can_moderate:
+                    bot.connection.privmsg(target, f'Cannot moderate "{args[1]}"!')
+                elif args[0] == 'enable':
+                    self.pre_lockdown(bot.connection, args[1])
+                elif args[0] == 'lift':
+                    self.pre_unlock(bot.connection, args[1])
+                else:
+                    bot.connection.privmsg(target, 'Something went wrong :(')
+            else:
+                bot.connection.privmsg(target, f'Unrecognised option "{args[0]}"')
 
     def pre_lockdown(self, connection, channel):
         """Pre lockdown checks."""
@@ -96,7 +157,7 @@ class Lockdown(Handler):
             if chan not in self.pending_users:
                 self.pending_users[chan] = []
             self.pending_users[chan].append(user)
-            connection.userhost(user)
+            connection.userhost([user])
 
     def on_userhost(self, connection, event):
         """Grant ops to trusted users."""
@@ -155,7 +216,7 @@ class Lockdown(Handler):
         if event.target not in self.can_moderate:
             return
         # channel = self.bot.channels[event.target]
-        modes = irc.modes.parse_channel_modes(event.arguments[0])
+        modes = irc.modes.parse_channel_modes(' '.join(event.arguments))
         for mode in modes:
             if event.target not in self.locked_down:
                 if mode == ['+', 'q', '*!*@*']:  # and channel.has_mode('z'):  # may not be +z yet
@@ -167,17 +228,11 @@ class Lockdown(Handler):
                     break
 
 
-def test_uhost(bot, event):
-    """Test only, please remove."""
-    bot.connection.send_items('USERHOST', 'Voidwalker')
-
-
-CommandHandler.commands.append(Command('uhost', test_uhost, restriction=Command.DEVELOPER, help='Testing only'))
-
-
 def load_handlers(bot):
     """Return an array of all in use handlers."""
     handlers = []
     handlers.append(BotHelper(bot))
     handlers.append(Lockdown(bot))
+    for handler in handlers:
+        handler.load_commands()
     return handlers
