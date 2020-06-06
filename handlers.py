@@ -74,6 +74,8 @@ class Lockdown(Handler):
         """Lockdown handler."""
         super().__init__(bot)
         self.locked_down = bot.saves.setdefault('locked_down', [])
+        for channel in self.locked_down:
+            bot.connection.privmsg('ChanServ', f'OP {channel} {bot.connection.get_nickname()}')
         self.pending = {}
         self.pending_users = {}
         self.auto = False
@@ -160,9 +162,18 @@ class Lockdown(Handler):
 
     def on_userhost(self, connection, event):
         """Grant ops to trusted users."""
+        user = event.arguments[0].split('=')[0]
+        host = event.arguments[0].split('@')[-1]
         for chan in self.pending_users:
-            pass
-            # TODO: I don't actually know what this event looks like
+            if user in self.pending_users[chan]:
+                if chan in self.bot.trusted.get('op', {}).get(host, []):
+                    connection.mode('+o', user)
+
+    def on_join(self, connection, event):
+        """Grant ops to trusted users when they join."""
+        if event.target in self.locked_down:
+            if event.target in self.bot.trusted.get('op', {}).get(event.source.host, []):
+                connection.mode('+o', event.source.nick)
 
     def pre_unlock(self, connection, channel):
         """Pre unlock checks."""
