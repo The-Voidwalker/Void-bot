@@ -55,7 +55,7 @@ class VoidBot(SingleServerIRCBot):
     def load(self):
         """Load saved information from JSON file."""
         with open('save.json', 'r') as saved:
-            self.saves = json.loads(saved)
+            self.saves = json.loads(saved.read())
         chans = self.saves.get('channel_list', [])
         for chan in chans:
             if chan not in self.channel_list:
@@ -65,9 +65,9 @@ class VoidBot(SingleServerIRCBot):
     def load_acl(self):
         """Load ACLs."""
         with open('acl/trusted.json', 'r') as trusted:
-            self.trusted = json.loads(trusted)
+            self.trusted = json.loads(trusted.read())
         with open('acl/banlist.json', 'r') as banlist:
-            self.banlist = json.loads(banlist)
+            self.banlist = json.loads(banlist.read())
 
     def save(self):
         """Save dynamic information."""

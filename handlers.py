@@ -74,11 +74,9 @@ class Lockdown(Handler):
         """Lockdown handler."""
         super().__init__(bot)
         self.locked_down = bot.saves.setdefault('locked_down', [])
-        for channel in self.locked_down:
-            bot.connection.privmsg('ChanServ', f'OP {channel} {bot.connection.get_nickname()}')
         self.pending = {}
         self.pending_users = {}
-        self.auto = False
+        self.auto = bot.saves.setdefault('lock_auto', False)
         self.commands.append(Command(
             'lockdown',
             self.lockdown_cmd,
@@ -96,7 +94,7 @@ class Lockdown(Handler):
         """Toggle automatic lockdown detection."""
         target = event.target if event.type == 'pubmsg' else event.source.nick
         old = self.auto
-        self.auto = not old
+        self.auto = bot.saves['lock_auto'] = not old
         if old:
             bot.connection.privmsg(target, 'Automatic handling of lockdowns was disabled.')
         else:
@@ -155,6 +153,8 @@ class Lockdown(Handler):
         channel = self.bot.channels[chan]
         connection.mode(chan, '+qz *!*@*')
         for user in channel.users():
+            if user in [connection.get_nickname(), 'ChanServ']:
+                continue
             if chan not in self.pending_users:
                 self.pending_users[chan] = []
             self.pending_users[chan].append(user)
@@ -162,18 +162,20 @@ class Lockdown(Handler):
 
     def on_userhost(self, connection, event):
         """Grant ops to trusted users."""
-        user = event.arguments[0].split('=')[0]
-        host = event.arguments[0].split('@')[-1]
+        user = event.arguments[0].split('=')[0].strip(' *')
+        host = event.arguments[0].split('@')[-1].strip()
         for chan in self.pending_users:
             if user in self.pending_users[chan]:
                 if chan in self.bot.trusted.get('op', {}).get(host, []):
-                    connection.mode('+o', user)
+                    connection.mode(chan, '+o ' + user)
 
     def on_join(self, connection, event):
         """Grant ops to trusted users when they join."""
         if event.target in self.locked_down:
+            if event.source == connection.get_nickname():
+                connection.privmsg('ChanServ', f'OP {event.target} {connection.get_nickname()}')
             if event.target in self.bot.trusted.get('op', {}).get(event.source.host, []):
-                connection.mode('+o', event.source.nick)
+                connection.mode(event.target, '+o ' + event.source.nick)
 
     def pre_unlock(self, connection, channel):
         """Pre unlock checks."""
