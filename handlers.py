@@ -73,10 +73,9 @@ class Lockdown(Handler):
     def __init__(self, bot):
         """Lockdown handler."""
         super().__init__(bot)
-        self.locked_down = []
+        self.locked_down = bot.saves.setdefault('locked_down', [])
         self.pending = {}
         self.pending_users = {}
-        # self.get_locked_down()  # In case of bot restarts, needs update
         self.auto = False
         self.commands.append(Command(
             'lockdown',
@@ -185,19 +184,6 @@ class Lockdown(Handler):
         # channel = self.bot.channels[chan]
         connection.mode(chan, '-q *!*@*')
         # TODO: DEOP OPS?
-
-    def get_locked_down(self):
-        """Identify channels that are locked down at startup/reload."""
-        # TODO, figure out a way to update for +q *!*@* instead of +m
-        connection = self.bot.connection
-        for chan in self.can_moderate:
-            try:
-                channel = self.bot.channels[chan]
-                if channel.is_moderated() and channel.has_mode("z"):
-                    self.locked_down.append(chan)
-                    connection.privmsg('ChanServ', f'OP {chan} {connection.get_nickname()}')
-            except KeyError:
-                log.debug(f'Bot is not in expected channel "{chan}"')
 
     def on_mode(self, connection, event):
         """Handle various mode changes."""

@@ -38,7 +38,6 @@ class CommandHandler:
 
     commands = []
     master_commands = []
-    trusted = []
 
     def __init__(self, event, bot):
         """Create a command handler."""
@@ -63,11 +62,11 @@ class CommandHandler:
         """Determine the permission level of the sender."""
         if self.sender.host == 'wikipedia/The-Voidwalker':
             return Command.DEVELOPER
-        if self.sender.host in self.trusted:
+        if self.sender.host in self.bot.trusted.get('trusted', []):
             return Command.TRUSTED
         if self.event.target[0] == '#':
             channel = self.bot.channels[self.event.target]
-            if channel.is_oper(self.sender.nick):
+            if channel.is_oper(self.sender.nick) or self.event.target in self.bot.trusted.get('op', {}).get(self.sender.host, []):
                 return Command.OPERATOR
             if channel.is_voiced(self.sender.nick):
                 return Command.VOICED

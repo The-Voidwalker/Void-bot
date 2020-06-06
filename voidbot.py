@@ -8,6 +8,7 @@ import command
 import commands
 import handlers
 import logging
+import json
 
 from importlib import reload
 from irc.bot import SingleServerIRCBot, ServerSpec
@@ -28,7 +29,11 @@ class VoidBot(SingleServerIRCBot):
         self.account = 'Void|Bot'
         self.dev = 'wikipedia/The-Voidwalker'
         self.__password = password
+        self.saves = {}
+        self.trusted = {}
+        self.banlist = {}
         self.channel_list = []
+        self.load()
         self.apis = {
             'meta': Api('miraheze', 'meta.miraheze.org'),
             'cvt': Api('miraheze', 'cvt.miraheze.org'),
@@ -36,9 +41,40 @@ class VoidBot(SingleServerIRCBot):
         }
         self.probably_connected = True
         self.reactor.scheduler.execute_every(600, self.check_connection)
+        self.reactor.scheduler.execute_every(1200, self.save)
         self.handlers = handlers.load_handlers(self)
         self.reactor.add_global_handler('all_events', self.run_handlers, 10)
-        # TODO: trust lists
+
+    @property
+    def acl(self):
+        """Return both trusted list and ban list as one object."""
+        acl = self.trusted.copy()
+        acl['banned'] = self.banlist
+        return acl
+
+    def load(self):
+        """Load saved information from JSON file."""
+        with open('save.json', 'r') as saved:
+            self.saves = json.loads(saved)
+        chans = self.saves.get('channel_list', [])
+        for chan in chans:
+            if chan not in self.channel_list:
+                self.channel_list.append(chan)
+        self.load_acl()
+
+    def load_acl(self):
+        """Load ACLs."""
+        with open('acl/trusted.json', 'r') as trusted:
+            self.trusted = json.loads(trusted)
+        with open('acl/banlist.json', 'r') as banlist:
+            self.banlist = json.loads(banlist)
+
+    def save(self):
+        """Save dynamic information."""
+        with open('save.json', 'w') as saved:
+            saved.write(json.dumps(self.saves))
+        with open('acl/banlist.json', 'w') as banlist:
+            banlist.write(json.dumps(self.banlist))
 
     def _identify(self):
         """Login with NickServ."""
@@ -67,6 +103,10 @@ class VoidBot(SingleServerIRCBot):
         """Run all known handlers."""
         for handler in self.handlers:
             handler.run(connection, event)
+
+    def on_disconnect(self, connection, event):
+        """Safeguard against shutdowns."""
+        self.save()
 
     def on_pong(self, connection, event):
         """Bot is connected."""
