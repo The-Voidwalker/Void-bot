@@ -5,8 +5,11 @@ Want to be able to reload event handlers as needed
 
 import logging
 import irc.modes
+import threading
+import time
 
 from command import Command, CommandHandler
+from abuse import ml, heuristics
 
 log = logging.getLogger(__name__)
 
@@ -225,6 +228,132 @@ class Lockdown(Handler):
                 if mode == ['-', 'q', '*!*@*']:  # and channel.has_mode('z'):  # z may be dropped first (handle that?)
                     self.pre_unlock(connection, event.target)
                     break
+
+
+class MLHandler(Handler):
+    """Implement machine learning abuse detection."""
+
+    def __init__(self, bot):
+        """Initialize needed stuff."""
+        super().__init__(bot)
+        self.pending_bans = {}
+        # Store values in bot to avoid retraining every reload
+        self.vectorizer = getattr(bot, 'vectorizer', False)
+        self.classifier = getattr(bot, 'classifier', False)
+        self.classifier2 = getattr(bot, 'classifier2', False)
+        self.heuristics = heuristics.load_rules()
+        self.timestamps = {}
+        self.commands.append(Command(
+            'train',
+            self.train,
+            restriction=Command.DEVELOPER,
+            help="(Re)train dataset (if you don't know what this means, don't touch it!)"
+        ))
+        if not (self.vectorizer and self.classifier and self.classifier2):
+            t_thread = threading.Thread(target=self.train())
+            t_thread.start()
+
+    def train(self, *args):
+        """Load in vectorizer and classifier."""
+        vectorizer, classifier, classifier2 = ml.train()
+        # Store values in bot to avoid retraining every reload
+        self.bot.vectorizer = self.vectorizer = vectorizer
+        self.bot.classifier = self.classifier = classifier
+        self.bot.classifier2 = self.classifier2 = classifier2
+
+    def check_flood(self, nick):
+        """Attempt to determine if supplied nick is flooding."""
+        # TODO: replace with better whitelist (incorporate into heuristics points?)
+        if "Bot" in nick or "Not" in nick:
+            return False
+        if nick not in self.timestamps:
+            self.timestamps[nick] = [time.time()]
+            return False
+        now = time.time()
+        timestamps = self.timestamps[nick]
+        for timestamp in timestamps.copy():
+            if now - timestamp > 30:
+                # Ignore all timestamps older than 30s
+                timestamps.remove(timestamp)
+        total = len(timestamps)
+        if total < 2:
+            self.timestamps[nick].append(now)
+            return False
+        if total > 30:
+            self.timestamps.pop(nick)  # Don't trip repeatedly on the same user
+            return True  # Hard limit at 1msg/sec over 30s
+        avg = 0
+        for i in range(len(timestamps)):
+            last = now if i == 0 else timestamps[i-1]
+            avg += (timestamps[i] - last) / total
+        if -(2.4 / total) + 3 > avg:
+            self.timestamps.pop(nick)  # Don't trip repeatedly on the same user
+            return True  # I don't want to explain this math, so I hope it works
+        self.timestamps[nick].append(now)
+        return False
+
+    def _clean(self):
+        """Clear old entries from timestamps."""
+        now = time.time()
+        for nick in self.timestamps:
+            for timestamp in self.timestamps[nick].copy():
+                if now - timestamp > 30:
+                    self.timestamps[nick].remove(timestamp)
+            if len(self.timestamps[nick]) == 0:
+                self.timestamps.pop(nick)
+
+    def on_pubmsg(self, connection, event):
+        """Process public messages for abuse."""
+        if self.vectorizer and self.classifier:
+            return
+        words = ' '.join(event.arguments)
+        wordbag = self.vectorizer.transform([words])
+        c = event.target
+
+        # Flood detection
+        if self.check_flood(event.source.nick):
+            log.warn(f'Detected flooding from "{event.source.nick}" in {c}')
+
+        # Classifier1
+        if self.classifier.predict(wordbag).tolist()[0]:
+            """Not ready for use
+            for rule in self.heuristics:
+                if rule.apply(event) <= -1000:
+                    return  # Whitelist users
+            """
+            log.warn(f'Classifier1 detected abusive message: "{words}" from "{event.source}" in "{c}"')
+            """Not ready for use
+            channel = self.bot.channels[c]
+            if channel.is_oper(connection.get_nickname):
+                connection.mode(c, '+b ' + event.sender.host)
+                connection.kick(c, event.sender.nick)
+            else:
+                if c not in self.pending_bans:
+                    self.pending_bans[c] = []
+                self.pending_bans[c].append(event.sender)
+                connection.privmsg('ChanServ', f'OP {c} {connection.get_nickname()}')
+            """
+
+        # Classifier2
+        points = self.classifier2.predict_proba(wordbag).tolist()[0][1]
+        points = int(points * 100)
+        for rule in self.heuristics:
+            points += rule.apply(event)
+        if points >= 95 or self.classifier2.predict(wordbag).tolist()[0]:
+            log.warn(f'Classifier2 tripped with score {points} on: "{words}" from "{event.source}" in "{c}"')
+
+        self._clean()  # Housekeeping
+
+    def on_mode(self, connection, event):
+        """Process pending bans."""
+        if event.target in self.pending_bans:
+            modes = irc.modes.parse_channel_modes(' '.join(event.arguments))
+            for mode in modes:
+                if mode == ['+', 'o', connection.get_nickname()]:
+                    for user in self.pending_bans[event.target]:
+                        connection.mode(event.target, '+b ' + user.host)
+                        connection.kick(event.target, user.nick)
+                    self.pending_bans.pop(event.target)
 
 
 def load_handlers(bot):
