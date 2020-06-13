@@ -250,7 +250,7 @@ class MLHandler(Handler):
             help="(Re)train dataset (if you don't know what this means, don't touch it!)"
         ))
         if not (self.vectorizer and self.classifier and self.classifier2):
-            t_thread = threading.Thread(target=self.train())
+            t_thread = threading.Thread(target=self.train)
             t_thread.start()
 
     def train(self, *args):
