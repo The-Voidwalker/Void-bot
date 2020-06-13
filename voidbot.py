@@ -32,7 +32,7 @@ class VoidBot(SingleServerIRCBot):
         self.account = 'Void|Bot'
         self.dev = 'wikipedia/The-Voidwalker'
         self.__password = password
-        self.path = Path(os.path.dirname(os.path.fullpath(sys.argv[0])))
+        self.path = Path(os.path.dirname(os.path.abspath(sys.argv[0])))
         self.saves = {}
         self.trusted = {}
         self.banlist = {}
