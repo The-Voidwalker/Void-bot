@@ -304,7 +304,7 @@ class MLHandler(Handler):
 
     def on_pubmsg(self, connection, event):
         """Process public messages for abuse."""
-        if self.vectorizer and self.classifier:
+        if not(self.vectorizer and self.classifier):
             return
         words = ' '.join(event.arguments)
         wordbag = self.vectorizer.transform([words])
