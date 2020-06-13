@@ -17,14 +17,10 @@ def process_text(text):
     return clean_words
 
 
-def train():
-    """Build and fit a vectorizer and classifier using data from a dataset.csv.
-
-    This file must be in the same directory as ml.py.
-    This method should be threaded properly!
-    """
+def train(path):
+    """Build and fit a vectorizer and classifier using data from the supplied path."""
     nltk.download('stopwords', quiet=True)
-    df = pd.read_csv('dataset.csv')
+    df = pd.read_csv(path)
     vectorizer = CountVectorizer(analyzer=process_text)
     messages_bow = vectorizer.fit_transform(df['text'].values.astype(str))
     classifier = SGDClassifier(loss='hinge', alpha=1e-6, tol=1e-6)

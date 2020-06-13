@@ -9,10 +9,13 @@ import commands
 import handlers
 import logging
 import json
+import sys
+import os
 
 from importlib import reload
 from irc.bot import SingleServerIRCBot, ServerSpec
 from wiki.api import Api
+from pathlib import Path
 
 log = logging.getLogger(__name__)
 
@@ -29,6 +32,7 @@ class VoidBot(SingleServerIRCBot):
         self.account = 'Void|Bot'
         self.dev = 'wikipedia/The-Voidwalker'
         self.__password = password
+        self.path = Path(os.path.dirname(os.path.fullpath(sys.argv[0])))
         self.saves = {}
         self.trusted = {}
         self.banlist = {}
@@ -54,7 +58,7 @@ class VoidBot(SingleServerIRCBot):
 
     def load(self):
         """Load saved information from JSON file."""
-        with open('save.json', 'r') as saved:
+        with open(self.path / 'save.json', 'r') as saved:
             self.saves = json.loads(saved.read())
         chans = self.saves.get('channel_list', [])
         for chan in chans:
@@ -64,16 +68,16 @@ class VoidBot(SingleServerIRCBot):
 
     def load_acl(self):
         """Load ACLs."""
-        with open('acl/trusted.json', 'r') as trusted:
+        with open(self.path / 'acl/trusted.json', 'r') as trusted:
             self.trusted = json.loads(trusted.read())
-        with open('acl/banlist.json', 'r') as banlist:
+        with open(self.path / 'acl/banlist.json', 'r') as banlist:
             self.banlist = json.loads(banlist.read())
 
     def save(self):
         """Save dynamic information."""
-        with open('save.json', 'w') as saved:
+        with open(self.path / 'save.json', 'w') as saved:
             saved.write(json.dumps(self.saves))
-        with open('acl/banlist.json', 'w') as banlist:
+        with open(self.path / 'acl/banlist.json', 'w') as banlist:
             banlist.write(json.dumps(self.banlist))
 
     def _identify(self):

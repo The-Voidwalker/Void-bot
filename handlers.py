@@ -255,7 +255,7 @@ class MLHandler(Handler):
 
     def train(self, *args):
         """Load in vectorizer and classifier."""
-        vectorizer, classifier, classifier2 = ml.train()
+        vectorizer, classifier, classifier2 = ml.train(self.bot.path / 'abuse/dataset.csv')
         # Store values in bot to avoid retraining every reload
         self.bot.vectorizer = self.vectorizer = vectorizer
         self.bot.classifier = self.classifier = classifier
@@ -361,6 +361,7 @@ def load_handlers(bot):
     handlers = []
     handlers.append(BotHelper(bot))
     handlers.append(Lockdown(bot))
+    handlers.append(MLHandler(bot))
     for handler in handlers:
         handler.load_commands()
     return handlers
