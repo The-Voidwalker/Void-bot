@@ -298,7 +298,7 @@ class MLHandler(Handler):
         """Clear old entries from timestamps."""
         with self.mutex:
             now = time.time()
-            nicks = self.timestamps.keys()
+            nicks = list(self.timestamps.keys())
             for nick in nicks:
                 for timestamp in self.timestamps[nick].copy():
                     if now - timestamp > 30:
