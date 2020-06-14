@@ -278,16 +278,13 @@ class MLHandler(Handler):
                     # Ignore all timestamps older than 30s
                     timestamps.remove(timestamp)
             total = len(timestamps)
-            if total < 2:
+            if total < 4:
                 self.timestamps[nick].append(now)
                 return False
             if total > 30:
                 self.timestamps.pop(nick)  # Don't trip repeatedly on the same user
                 return True  # Hard limit at 1msg/sec over 30s
-            avg = 0
-            for i in range(len(timestamps)):
-                last = now if i == 0 else timestamps[i-1]
-                avg += (timestamps[i] - last) / total
+            avg = (now - timestamps[0]) / (total + 1)  # A simpler system, 0 index should be oldest
             if -(2.4 / total) + 3 > avg:
                 self.timestamps.pop(nick)  # Don't trip repeatedly on the same user
                 return True  # I don't want to explain this math, so I hope it works
