@@ -243,6 +243,7 @@ class MLHandler(Handler):
         self.classifier2 = getattr(bot, 'classifier2', False)
         self.heuristics = heuristics.load_rules()
         self.timestamps = {}
+        self.mutex = threading.RLock()
         self.commands.append(Command(
             'train',
             self.train,
@@ -264,43 +265,45 @@ class MLHandler(Handler):
     def check_flood(self, nick):
         """Attempt to determine if supplied nick is flooding."""
         # TODO: replace with better whitelist (incorporate into heuristics points?)
-        if "Bot" in nick or "Not" in nick:
-            return False
-        if nick not in self.timestamps:
-            self.timestamps[nick] = [time.time()]
-            return False
-        now = time.time()
-        timestamps = self.timestamps[nick]
-        for timestamp in timestamps.copy():
-            if now - timestamp > 30:
-                # Ignore all timestamps older than 30s
-                timestamps.remove(timestamp)
-        total = len(timestamps)
-        if total < 2:
+        with self.mutex:
+            if "Bot" in nick or "Not" in nick:
+                return False
+            if nick not in self.timestamps:
+                self.timestamps[nick] = [time.time()]
+                return False
+            now = time.time()
+            timestamps = self.timestamps[nick]
+            for timestamp in timestamps.copy():
+                if now - timestamp > 30:
+                    # Ignore all timestamps older than 30s
+                    timestamps.remove(timestamp)
+            total = len(timestamps)
+            if total < 2:
+                self.timestamps[nick].append(now)
+                return False
+            if total > 30:
+                self.timestamps.pop(nick)  # Don't trip repeatedly on the same user
+                return True  # Hard limit at 1msg/sec over 30s
+            avg = 0
+            for i in range(len(timestamps)):
+                last = now if i == 0 else timestamps[i-1]
+                avg += (timestamps[i] - last) / total
+            if -(2.4 / total) + 3 > avg:
+                self.timestamps.pop(nick)  # Don't trip repeatedly on the same user
+                return True  # I don't want to explain this math, so I hope it works
             self.timestamps[nick].append(now)
             return False
-        if total > 30:
-            self.timestamps.pop(nick)  # Don't trip repeatedly on the same user
-            return True  # Hard limit at 1msg/sec over 30s
-        avg = 0
-        for i in range(len(timestamps)):
-            last = now if i == 0 else timestamps[i-1]
-            avg += (timestamps[i] - last) / total
-        if -(2.4 / total) + 3 > avg:
-            self.timestamps.pop(nick)  # Don't trip repeatedly on the same user
-            return True  # I don't want to explain this math, so I hope it works
-        self.timestamps[nick].append(now)
-        return False
 
     def _clean(self):
         """Clear old entries from timestamps."""
-        now = time.time()
-        for nick in self.timestamps:
-            for timestamp in self.timestamps[nick].copy():
-                if now - timestamp > 30:
-                    self.timestamps[nick].remove(timestamp)
-            if len(self.timestamps[nick]) == 0:
-                self.timestamps.pop(nick)
+        with self.mutex:
+            now = time.time()
+            for nick in self.timestamps:
+                for timestamp in self.timestamps[nick].copy():
+                    if now - timestamp > 30:
+                        self.timestamps[nick].remove(timestamp)
+                if len(self.timestamps[nick]) == 0:
+                    self.timestamps.pop(nick)
 
     def on_pubmsg(self, connection, event):
         """Process public messages for abuse."""
