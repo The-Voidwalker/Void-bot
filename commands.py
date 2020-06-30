@@ -189,7 +189,7 @@ def log(bot, event):
         now = datetime.utcnow()
         header = now.strftime('== %Y-%m-%d ==')
         source = event.source.nick
-        format = '* <%s> %L --~~~~'
+        format = '* <%s> %L --~~~~~'
         try:
             log_entry = Logger.irc_entry(event, format)
             Logger(api, page, header, source, log_entry).run()

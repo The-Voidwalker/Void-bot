@@ -1,8 +1,10 @@
 __pycache__/
 acl/
+logs/
 issues.log
 launch.py
 auth_config.py
 consumerinfo.txt
 save.json
 dataset.csv
+vbl.sh
