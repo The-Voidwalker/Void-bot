@@ -183,6 +183,21 @@ def log(bot, event):
         except (ConnectionError, ApiError) as e:
             bot.connection.privmsg(event.target, 'Failed to save item!')
             logs.exception(e)
+    elif event.target == '#miraheze-bots':
+        api = bot.apis['botwiki']
+        page = 'MirahezeBotsWiki:Server admin log'
+        now = datetime.utcnow()
+        header = now.strftime('== %Y-%m-%d ==')
+        source = event.source.nick
+        format = '* <%s> %L --~~~~'
+        try:
+            log_entry = Logger.irc_entry(event, format)
+            Logger(api, page, header, source, log_entry).run()
+            bot.connection.privmsg(event.target, f'Saved item "{event.arguments[0][5:]}"')
+            logs.info(f'{source} issued botwiki SAL; {event.arguments[0][5:]}')
+        except (ConnectionError, ApiError) as e:
+            bot.connection.privmsg(event.target, 'Failed to save item!')
+            logs.exception(e)
 
 
 help_str = 'Does cvt log and testadminwiki server admin log.'
