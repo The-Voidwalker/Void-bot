@@ -52,7 +52,8 @@ class BotHelper(Handler):
         channel = event.target
         if channel == '#miraheze-cvt' and sender.host == 'miraheze/bot/Zppix' and sender.nick != 'ZppixBot':
             self.discord = sender.nick
-            self.skip_events.remove('mode')
+            if 'mode' in self.skip_events:
+                self.skip_events.remove('mode')
             connection.privmsg('ChanServ', f'OP #miraheze-cvt-private {connection.get_nickname()}')
 
     def on_mode(self, connection, event):
@@ -61,7 +62,8 @@ class BotHelper(Handler):
             modes = irc.modes.parse_channel_modes(' '.join(event.arguments))
             for mode in modes:
                 if mode == ['+', 'o', connection.get_nickname()]:
-                    self.skip_events.append('mode')
+                    if 'mode' not in self.skip_events:
+                        self.skip_events.append('mode')
                     connection.invite(self.discord, '#miraheze-cvt-private')
                     connection.mode(event.target, '-o ' + connection.get_nickname())
                     self.discord = False
