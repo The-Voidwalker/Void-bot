@@ -37,39 +37,6 @@ class Handler():
             CommandHandler.commands.append(command)
 
 
-class BotHelper(Handler):
-    """Help MH-Discord join a private channel."""
-
-    def __init__(self, bot):
-        """Create bot helper handler."""
-        super().__init__(bot)
-        self.discord = False
-        self.skip_events.append('mode')
-
-    def on_join(self, connection, event):
-        """Help Zppix with his damn bot."""
-        sender = event.source
-        channel = event.target
-        if channel == '#miraheze-cvt' and sender.host == 'miraheze/bot/Zppix' and sender.nick != 'ZppixBot':
-            self.discord = sender.nick
-            if 'mode' in self.skip_events:
-                self.skip_events.remove('mode')
-            connection.privmsg('ChanServ', f'OP #miraheze-cvt-private {connection.get_nickname()}')
-
-    def on_mode(self, connection, event):
-        """Help Zppix with his damn bot part 2."""
-        if self.discord is not False and event.target == '#miraheze-cvt-private':
-            modes = irc.modes.parse_channel_modes(' '.join(event.arguments))
-            for mode in modes:
-                if mode == ['+', 'o', connection.get_nickname()]:
-                    if 'mode' not in self.skip_events:
-                        self.skip_events.append('mode')
-                    connection.invite(self.discord, '#miraheze-cvt-private')
-                    connection.mode(event.target, '-o ' + connection.get_nickname())
-                    self.discord = False
-                    break
-
-
 class Lockdown(Handler):
     """Manage lockdowns."""
 
@@ -362,7 +329,6 @@ class MLHandler(Handler):
 def load_handlers(bot):
     """Return an array of all in use handlers."""
     handlers = []
-    handlers.append(BotHelper(bot))
     handlers.append(Lockdown(bot))
     handlers.append(MLHandler(bot))
     for handler in handlers:
