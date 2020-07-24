@@ -94,9 +94,10 @@ class VoidBot(SingleServerIRCBot):
 
     def check_connection(self):
         """Verify connection to server."""
-        self.probably_connected = False
-        self.reactor.scheduler.execute_after(30, self.check_connection_call)
-        self.connection.ping('freenode.net')
+        if self.connection.is_connected():
+            self.probably_connected = False
+            self.reactor.scheduler.execute_after(30, self.check_connection_call)
+            self.connection.ping('freenode.net')
 
     def check_connection_call(self):
         """Handle possible disconnect."""
