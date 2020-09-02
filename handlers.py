@@ -339,7 +339,7 @@ class AuthPageHandler(Handler):
         """Process incoming messages."""
         if event.target == "#miraheze-feed":
             msg = ' '.join(event.arguments)
-            msg = cleaner.sub('', msg)
+            msg = self.cleaner.sub('', msg)
             if 'metawiki * [[Discord/auth]]' == ' '.join(msg.slice()[0:3]):
                 with open(self.bot.path / "Discord.auth.txt") as file:
                     content = file.read()
