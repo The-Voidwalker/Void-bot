@@ -340,7 +340,7 @@ class AuthPageHandler(Handler):
         if event.target == "#miraheze-feed":
             msg = ' '.join(event.arguments)
             msg = self.cleaner.sub('', msg)
-            if 'metawiki * [[Discord/auth]]' == ' '.join(msg.slice()[0:3]):
+            if 'metawiki * [[Discord/auth]]' == ' '.join(msg.split()[0:3]):
                 with open(self.bot.path / "Discord.auth.txt") as file:
                     content = file.read()
                     self.bot.apis['meta'].edit('Discord/auth', content, "BOT: resetting page")
