@@ -326,11 +326,27 @@ class MLHandler(Handler):
                     self.pending_bans.pop(event.target)
 
 
+class AuthPageHandler(Handler):
+    """Automagically reset Discord/auth after detecting edits."""
+
+    def __init__(self, bot):
+        """Setup that probably can just be skipped, but w/e."""
+        super().__init__(bot)
+
+    def on_pubmsg(self, connection, event):
+        """Process incoming messages."""
+        if event.target == "#miraheze-feed" and "metawiki * [[Discord/auth]]" in ' '.join(event.arguments)):
+            with open(self.bot.path / "Discord.auth.txt") as file:
+                content = file.read()
+                self.bot.apis['meta'].edit('Discord/auth', content, "BOT: resetting page")
+
+
 def load_handlers(bot):
     """Return an array of all in use handlers."""
     handlers = []
     handlers.append(Lockdown(bot))
     handlers.append(MLHandler(bot))
+    handlers.append(AuthPageHander(bot))
     for handler in handlers:
         handler.load_commands()
     return handlers
