@@ -1,0 +1,26 @@
+This page is left intentionally blank. Its sole purpose is to authenticate [[Discord]] members. <small>[https://meta.miraheze.org/w/index.php?title=Discord/auth&oldid=109384&action=edit (reset this page)]</small>
+
+<!--- PLEASE MAKE ANY CHANGE(s) WITHIN THE MARKED SPACE BELOW
+-
+-
+-
+-
+-
+-
+-
+-
+-
+-
+-
+-
+-
+-
+-
+-
+-
+-
+-
+-
+-
+-
+END OF AREA IN WHICH TO MAKE ANY CHANGE(s) --->
