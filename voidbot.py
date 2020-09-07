@@ -29,6 +29,7 @@ class VoidBot(SingleServerIRCBot):
     def __init__(self, password):
         """Create a VoidBot."""
         super().__init__([ServerSpec('irc.freenode.net')], 'Void-bot', 'VoidBot')
+        self.connection.buffer.encoding = "latin-1"  # Encoded colors cause errors with utf-8
         self.account = 'Void|Bot'
         self.dev = 'wikipedia/The-Voidwalker'
         self.__password = password
