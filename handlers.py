@@ -350,8 +350,8 @@ def load_handlers(bot):
     """Return an array of all in use handlers."""
     handlers = []
     handlers.append(Lockdown(bot))
-    handlers.append(MLHandler(bot))
-    handlers.append(AuthPageHandler(bot))
+    # handlers.append(MLHandler(bot))
+    # handlers.append(AuthPageHandler(bot))
     for handler in handlers:
         handler.load_commands()
     return handlers
