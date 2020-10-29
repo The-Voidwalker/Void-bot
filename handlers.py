@@ -10,7 +10,7 @@ import time
 import re
 
 from command import Command, CommandHandler
-from abuse import ml, heuristics
+from abuse import ml  #, heuristics
 
 log = logging.getLogger(__name__)
 
@@ -211,7 +211,7 @@ class MLHandler(Handler):
         self.vectorizer = getattr(bot, 'vectorizer', False)
         self.classifier = getattr(bot, 'classifier', False)
         self.classifier2 = getattr(bot, 'classifier2', False)
-        self.heuristics = heuristics.load_rules()
+        self.heuristics = []
         self.timestamps = {}
         self.mutex = threading.RLock()
         self.commands.append(Command(
