@@ -51,12 +51,15 @@ class CommandHandler:
 
         Returns a command object if a command can be found, otherwise False.
         """
-        prefix = self.line[:1]
-        word = self.line.split()[0][1:]
-        for command in (self.master_commands + self.commands):
-            if command.prefix == prefix and command.name == word:
-                return command
-        return False
+        try:
+            prefix = self.line[:1]
+            word = self.line.split()[0][1:]
+            for command in (self.master_commands + self.commands):
+                if command.prefix == prefix and command.name == word:
+                    return command
+            return False
+        except Exception:
+            return False  # Empty strings
 
     def perm_level(self):
         """Determine the permission level of the sender."""
