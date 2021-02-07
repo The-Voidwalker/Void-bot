@@ -43,7 +43,7 @@ class VoidBot(SingleServerIRCBot):
             'meta': Api('miraheze', 'meta.miraheze.org'),
             'cvt': Api('miraheze', 'cvt.miraheze.org'),
             'testadminwiki': Api('testadminwiki', 'testwiki.wiki', script_path=''),
-            'botwiki': Api('miraheze', 'bots.miraheze.org')
+            'botwiki': Api('miraheze', 'wiki.mirahezebots.org')
         }
         self.probably_connected = True
         self.reactor.scheduler.execute_every(600, self.check_connection)
