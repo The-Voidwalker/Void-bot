@@ -34,7 +34,7 @@ class VoidBot(SingleServerIRCBot):
         super().__init__([ServerSpec('irc.libera.chat', 6697)], 'Void-bot', 'VoidBot', connect_factory = factory)
         self.connection.buffer_class.errors = "replace"  # Encoded colors cause errors with utf-8
         self.account = 'Void-bot'
-        self.dev = 'wikipedia/The-Voidwalker'
+        self.dev = 'miraheze/Void'
         self.__password = password
         self.path = Path(os.path.dirname(os.path.abspath(sys.argv[0])))
         self.saves = {}
