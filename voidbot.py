@@ -11,9 +11,11 @@ import logging
 import json
 import sys
 import os
+import ssl
 
 from importlib import reload
 from irc.bot import SingleServerIRCBot, ServerSpec
+from irc.connection import Factory
 from wiki.api import Api
 from pathlib import Path
 
@@ -28,10 +30,11 @@ class VoidBot(SingleServerIRCBot):
 
     def __init__(self, password):
         """Create a VoidBot."""
-        super().__init__([ServerSpec('irc.freenode.net')], 'Void-bot', 'VoidBot')
+        factory = Factory(wrapper=ssl.wrap_socket)  # SSL support
+        super().__init__([ServerSpec('irc.libera.chat', 6697)], 'Void-bot', 'VoidBot', connect_factory = factory)
         self.connection.buffer_class.errors = "replace"  # Encoded colors cause errors with utf-8
-        self.account = 'Void|Bot'
-        self.dev = 'wikipedia/The-Voidwalker'
+        self.account = 'Void-bot'
+        self.dev = 'miraheze/Void'
         self.__password = password
         self.path = Path(os.path.dirname(os.path.abspath(sys.argv[0])))
         self.saves = {}

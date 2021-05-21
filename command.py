@@ -63,7 +63,7 @@ class CommandHandler:
 
     def perm_level(self):
         """Determine the permission level of the sender."""
-        if self.sender.host == 'wikipedia/The-Voidwalker':
+        if self.sender.host == self.bot.dev:
             return Command.DEVELOPER
         if self.sender.host in self.bot.trusted.get('trusted', []):
             return Command.TRUSTED
