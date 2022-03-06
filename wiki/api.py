@@ -2,6 +2,8 @@
 
 import requests
 import wiki.auth_config
+DEFAULT_USER_AGENT = 'Void-Bot'
+requests.utils.default_user_agent = lambda: DEFAULT_USER_AGENT
 
 
 class Api:
