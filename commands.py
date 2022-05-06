@@ -183,9 +183,9 @@ def log(bot, event):
         except (ConnectionError, ApiError) as e:
             bot.connection.privmsg(event.target, 'Failed to save item!')
             logs.exception(e)
-    elif event.target == '#miraheze-bots':
+    elif event.target == '#fossbots':
         api = bot.apis['botwiki']
-        page = 'MirahezeBotsWiki:Server admin log'
+        page = 'FOSSBotsWiki:Server admin log'
         now = datetime.utcnow()
         header = now.strftime('== %Y-%m-%d ==')
         source = event.source.nick
