@@ -101,7 +101,7 @@ class VoidBot(SingleServerIRCBot):
         if self.connection.is_connected():
             self.probably_connected = False
             self.reactor.scheduler.execute_after(30, self.check_connection_call)
-            self.connection.ping('freenode.net')
+            self.connection.ping('irc.libera.chat')
 
     def check_connection_call(self):
         """Handle possible disconnect."""
