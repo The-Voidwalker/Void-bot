@@ -39,7 +39,7 @@ class Api:
         """
         if response.status_code != 200:
             raise ConnectionError(
-                f'Recieved HTTP "{response.status_code}"'
+                f'Received HTTP "{response.status_code}"'
                 + f' from "{self.hostname}"; expected HTTP 200'
             )
         r_json = response.json()

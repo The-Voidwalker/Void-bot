@@ -7,7 +7,6 @@ import logging
 import irc.modes
 import threading
 import time
-import re
 
 from command import Command, CommandHandler
 from abuse import ml  #, heuristics
@@ -327,31 +326,11 @@ class MLHandler(Handler):
                     self.pending_bans.pop(event.target)
 
 
-class AuthPageHandler(Handler):
-    """Automagically reset Discord/auth after detecting edits."""
-
-    def __init__(self, bot):
-        """Unnecessary function."""
-        super().__init__(bot)
-        self.cleaner = re.compile(r'\\x\d+')
-
-    def on_pubmsg(self, connection, event):
-        """Process incoming messages."""
-        if event.target == "#miraheze-feed":
-            msg = ' '.join(event.arguments)
-            msg = self.cleaner.sub('', msg)
-            if 'metawiki * [[Discord/auth]]' == ' '.join(msg.split()[0:3]):
-                with open(self.bot.path / "Discord.auth.txt") as file:
-                    content = file.read()
-                    self.bot.apis['meta'].edit('Discord/auth', content, "BOT: resetting page")
-
-
 def load_handlers(bot):
     """Return an array of all in use handlers."""
     handlers = []
     handlers.append(Lockdown(bot))
     # handlers.append(MLHandler(bot))
-    # handlers.append(AuthPageHandler(bot))
     for handler in handlers:
         handler.load_commands()
     return handlers
