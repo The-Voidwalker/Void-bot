@@ -179,6 +179,41 @@ class Api:
         )
         self.handle_resp(resp)  # Check for errors
 
+    def global_block(self, target, reason, expiry='never', anononly=True,
+                     modify=False, alsolocal=True, localanononly=True,
+                     revoke_local_talk=False):
+        """Apply a global block.
+        
+        :param target: (string) Target IP address or IP range in CIDR format
+        :param reason: (string) Reason for global block
+        :param expiry: (string) Expiry time of block
+        :param anononly: (boolean) Apply global block to anon users only
+        :param modify: (boolean) Modify existing block
+        :param alsolocal: (boolean) Apply a local block additionally to global
+        :param localanononly: (boolean) Apply local block to anon users only
+        :param revoke_local_talk: (boolean) Revoke talk page access locally
+        """
+        token = self.get_token()
+        query = self.query.copy()
+        query.update({
+            'action': 'globalblock',
+            'target': target,
+            'reason': reason,
+            'expiry': expiry,
+            'anononly': anononly,
+            'modify': modify,
+            'alsolocal': alsolocal,
+            'localanononly': localanononly,
+            'localblockstalk': revoke_local_talk,
+            'token': token
+        })
+        resp = requests.post(
+            self.url,
+            params=query,
+            auth=self.oauth
+        )
+        self.handle_resp(resp)  # Check for errors
+
     def log(self, type=None, action=None, user=None, limit=10):
         """Get a set of log entries.
 
